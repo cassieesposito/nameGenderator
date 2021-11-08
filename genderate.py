@@ -108,26 +108,25 @@ def printUsage():
     print(
         textwrap.dedent(
             f"""
-Outputs gender statistics about US baby names over time based on Social Security
-Administration data.
+            Outputs gender statistics about US baby names over time based on Social Security
+            Administration data.
 
-Usage:       ./genderate.py [options] {U}name{u}
-{U}name{u}   The name you would like statistical information about. Case sensitive.
-{B}-y{b}     Output data on an annual basis. Mutually exclusive with -d
-{B}-d{b}     Output data on a decade basis. Mutually exclusive with -y. Default behavior
+            Usage:       ./genderate.py [options] {U}name{u}
+            {U}name{u}   The name you would like statistical information about. Case sensitive.
+            {B}-y{b}     Output data on an annual basis. Mutually exclusive with -d
+            {B}-d{b}     Output data on a decade basis. Mutually exclusive with -y. Default behavior
 
-{B}-s{b} {U}year{u}, {B}--start_year={b}{U}year{u}
-    The first year you would like data counted. Default: Earliest available year.
+            {B}-s{b} {U}year{u}, {B}--start_year={b}{U}year{u}
+                The first year you would like data counted. Default: Earliest available year.
 
-{B}-e{b} {U}year{u}, {B}--end_year={b}{U}year{u}
-    The last year you would like data counted. Default: Latest available year.
+            {B}-e{b} {U}year{u}, {B}--end_year={b}{U}year{u}
+                The last year you would like data counted. Default: Latest available year.
 
-This was written primarily for the author's own benefit and the benefit of their growing family.
+            This was written primarily for the author's own benefit and the benefit of their growing family.
 
-SSA data can be found at: https://www.ssa.gov/oact/babynames/names.zip
-To update, or if you've recieved the script withou accompanying data, unpack the archive to ./data
-
-"""
+            SSA data can be found at: https://www.ssa.gov/oact/babynames/names.zip
+            To update, or if you've recieved the script withou accompanying data, unpack the archive to ./data
+            """
         )
     )
     sys.exit()
