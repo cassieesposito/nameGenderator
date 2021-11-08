@@ -2,9 +2,9 @@
 
 #####################################################################################
 #                                                                                   #
-# 	Baby Name Genderator                                                        #
-# 	Version 1.0                                                                 #
-# 	"Playing with Python 3"                                                     #
+# 	Baby Name Genderator                                                            #
+# 	Version 1.1                                                                     #
+# 	"Playing with Python 3"                                                         #
 #                                                                                   #
 #   Future development ideas:                                                       #
 #           * Data sanity checking and human readable errors in the case of         #
@@ -13,10 +13,11 @@
 #             including sanity checking the new data in case of a format change     #
 #             or malicious actor.                                                   #
 #           * Writing a proper README.md in place of this header.                   #
-#           * Accept command line arguments with flags                              #
 #           * Learn the csv module by replacing my brute force text processing      #
 #                                                                                   #
 #   Changelog:                                                                      #
+#       1.1:                                                                        #
+#           * Implemented command line flags for optional arguments                 #
 #       1.0:                                                                        #
 #           * Updated codebase to Python 3.                                         #
 #           * Default start and end years are now based on the data available       #
@@ -33,7 +34,7 @@
 #                                                                                   #
 #####################################################################################
 
-import sys, os, textwrap, re
+import sys, getopt, os, textwrap, re
 
 # Usage information
 def printUsage():
@@ -59,34 +60,12 @@ def printUsage():
 		"""
         )
     )
-
-
-# Reading command line input and initializing global variables
-nameData = {}
-
-# Print usage information and quit if no name input
-try:
-    name = sys.argv[1]
-except:
-    printUsage()
     sys.exit()
 
-# Read in command line options or set defaults
-try:
-    startYear = int(sys.argv[3])
-except:
-    startYear = 0
-try:
-    endYear = int(sys.argv[4])
-except:
-    endYear = 0
-try:
-    outputType = sys.argv[2]
-except:
-    outputType = "d"
 
 ###### MAIN FUNCTION ######
 def main():
+    initialize()
     gatherNameStatistics()  # Read data into nameData Dictionary
 
     print(
@@ -102,6 +81,42 @@ def main():
     else:  # print usage and quit if output mode is invalid
         printUsage()
         sys.exit()
+
+
+def initialize():
+    # Reading command line input and initializing global variables
+    global nameData, name, startYear, endYear, outputType
+
+    # setDefaults
+    nameData = {}
+    startYear = 0
+    endYear = 0
+    outputType = 0
+
+    malformed = 0
+    opts, args = getopt.getopt(sys.argv[1:], "yds:e:", ["start-year=", "end-year="])
+
+    if len(args) != 1:
+        printUsage()
+    else:
+        name = args[0]
+
+    for opt, arg in opts:
+        if opt == "-y":
+            outputType += 1
+        if opt == "-d":
+            outputType += 10
+        if opt in ("-s", "--start-year"):
+            startYear = arg
+        if opt in ("-e", "--end-year"):
+            endYear = arg
+
+    if 0 <= outputType <= 1:
+        outputType = "y"
+    elif outputType == 10:
+        outputType = "d"
+    else:
+        printUsage()
 
 
 # Read in Social Security Administration name data CSV files and create a dictionary of dictionaries
