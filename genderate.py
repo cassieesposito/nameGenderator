@@ -18,6 +18,7 @@
 #   Changelog:                                                                      #
 #       1.1:                                                                        #
 #           * Implemented command line flags for optional arguments                 #
+#           * Updated to use csv module                                             #
 #       1.0:                                                                        #
 #           * Updated codebase to Python 3.                                         #
 #           * Default start and end years are now based on the data available       #
@@ -34,39 +35,19 @@
 #                                                                                   #
 #####################################################################################
 
-import sys, getopt, os, textwrap, re
+import sys, getopt, os, textwrap, re, csv
 
 # Usage information
-def printUsage():
-    print(
-        textwrap.dedent(
-            """
-		Outputs gender statistics about US baby names over time based on Social Security Administration data.
-
-		Usage:       ./genderate.py name [outputType] [startYear] [endYear]
-		name         The name you would like statistical information about. Case sensitive.
-		outputType   y(ear) or d(ecade). Default d.
-		startYear    The first year you would like data counted. Default: Earliest available year.
-		endYear      The last year you would like data counted. Default: Latest available year.
-
-		This was written primarily for the author's own benefit and the benefit of their growing family. It was designed to get the job
-		done quick and dirty and does very little sanity checking. If you want to use a command line argument, you must use all of the
-		previous optional arguments. If you put any files in the data directory that are not in the appropriate format, it will break. If
-		you have any files in the data directory whose names are not integers, it will break. Malformed data might cause this message to
-		be shown. Or it might cause a crash and traceback. I don't know, I haven't tested it.
-
-		As of 18/31/21, The data the SSA produces can be found at https://www.ssa.gov/oact/babynames/names.zip
-		To update the data this script draws or if you've recieved the script without accompanying data, unpack the archive to ./data
-		"""
-        )
-    )
-    sys.exit()
 
 
 ###### MAIN FUNCTION ######
 def main():
     initialize()
-    gatherNameStatistics()  # Read data into nameData Dictionary
+    if gatherNameStatistics() == gatherNameStatistics_OLD():
+        gatherNameStatistics()  # Read data into nameData Dictionary
+    else:
+        print("New Name Stats don't match")
+        sys.exit()
 
     print(
         "US Baby name statistics for the name %s from %d through %d"
@@ -93,7 +74,6 @@ def initialize():
     endYear = 0
     outputType = 0
 
-    malformed = 0
     opts, args = getopt.getopt(sys.argv[1:], "yds:e:", ["start-year=", "end-year="])
 
     if len(args) != 1:
@@ -107,9 +87,12 @@ def initialize():
         if opt == "-d":
             outputType += 10
         if opt in ("-s", "--start-year"):
-            startYear = arg
+            startYear = int(arg)
         if opt in ("-e", "--end-year"):
-            endYear = arg
+            endYear = int(arg)
+
+    if startYear > endYear:
+        printUsage
 
     if 0 <= outputType <= 1:
         outputType = "y"
@@ -119,8 +102,82 @@ def initialize():
         printUsage()
 
 
-# Read in Social Security Administration name data CSV files and create a dictionary of dictionaries
+def printUsage():
+    B, b = "\033[1m", "\033[0m"
+    U, u = "\033[4m", "\033[0m"
+    print(
+        textwrap.dedent(
+            f"""
+Outputs gender statistics about US baby names over time based on Social Security
+Administration data.
+
+Usage:       ./genderate.py [options] {U}name{u}
+{U}name{u}   The name you would like statistical information about. Case sensitive.
+{B}-y{b}     Output data on an annual basis. Mutually exclusive with -d
+{B}-d{b}     Output data on a decade basis. Mutually exclusive with -y. Default behavior
+
+{B}-s{b} {U}year{u}, {B}--start_year={b}{U}year{u}
+    The first year you would like data counted. Default: Earliest available year.
+
+{B}-e{b} {U}year{u}, {B}--end_year={b}{U}year{u}
+    The last year you would like data counted. Default: Latest available year.
+
+This was written primarily for the author's own benefit and the benefit of their growing family.
+
+SSA data can be found at: https://www.ssa.gov/oact/babynames/names.zip
+To update, or if you've recieved the script withou accompanying data, unpack the archive to ./data
+
+"""
+        )
+    )
+    sys.exit()
+
+
 def gatherNameStatistics():
+    global nameData
+    firstYear, lastYear = 9999, 0
+
+    # Read in data files. Each year's data is in a separate file named according to its year. Every name that was given to at least
+    # five babies who were assigned the same sex will have an entry in the following format:
+    # Name,[M/F],Number\r\n
+    for year in os.listdir(os.getcwd() + "/data"):
+        # Ignore NationalReadMe.pdf and any other files that aren't named appropriately
+        dataFileNames = re.compile(r"yob[0-9]{4}\.txt")
+        if dataFileNames.match(year):
+            with open("./data/" + year, "r", newline="") as f:
+                year = int(year.removeprefix("yob").removesuffix(".txt"))
+
+                # Get the first and last years that data is available for
+                if year < firstYear:
+                    firstYear = year
+                if year > lastYear:
+                    lastYear = year
+
+                reader = csv.reader(f)
+                for line in reader:
+                    # If we are looking at a line for the name that was inputted, try to update the dictionary for that year with a subdictionary entry in the format Sex:Number.
+                    # If there is not already an entry for that year, it will raise an exception, in which case, create the subdictionary. Strip the newline data off and typecast
+                    # data appropriately in the process.
+                    if line[0] == name:
+                        try:
+                            nameData[int(year)].update(
+                                {line[1]: int(line[2].rstrip("\r\n"))}
+                            )
+                        except:
+                            nameData[int(year)] = {line[1]: int(line[2].rstrip("\r\n"))}
+                f.close()
+
+        # If startYear or endYear is unspecified, set it according to the data that is available
+    global startYear, endYear
+    if not startYear:
+        startYear = firstYear
+    if not endYear:
+        endYear = lastYear
+    return nameData
+
+
+# Read in Social Security Administration name data CSV files and create a dictionary of dictionaries
+def gatherNameStatistics_OLD():
     firstYear, lastYear = 9999, 0
 
     # Read in data files. Each year's data is in a separate file named according to its year. Every name that was given to at least
@@ -163,6 +220,7 @@ def gatherNameStatistics():
         startYear = firstYear
     if not endYear:
         endYear = lastYear
+    return nameData
 
 
 def outputDecades():
