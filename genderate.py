@@ -43,11 +43,8 @@ import sys, getopt, os, textwrap, re, csv
 ###### MAIN FUNCTION ######
 def main():
     initialize()
-    if gatherNameStatistics() == gatherNameStatistics_OLD():
-        gatherNameStatistics()  # Read data into nameData Dictionary
-    else:
-        print("New Name Stats don't match")
-        sys.exit()
+
+    gatherNameStatistics()  # Read data into nameData Dictionary
 
     print(
         "US Baby name statistics for the name %s from %d through %d"
@@ -139,7 +136,7 @@ def gatherNameStatistics():
     # Read in data files. Each year's data is in a separate file named according to its year. Every name that was given to at least
     # five babies who were assigned the same sex will have an entry in the following format:
     # Name,[M/F],Number\r\n
-    for year in os.listdir(os.getcwd() + "/data"):
+    for year in os.listdir(os.path.dirname(os.path.abspath(__file__)) + "/data"):
         # Ignore NationalReadMe.pdf and any other files that aren't named appropriately
         dataFileNames = re.compile(r"yob[0-9]{4}\.txt")
         if dataFileNames.match(year):
@@ -165,53 +162,6 @@ def gatherNameStatistics():
                         except:
                             nameData[int(year)] = {line[1]: int(line[2].rstrip("\r\n"))}
                 f.close()
-
-        # If startYear or endYear is unspecified, set it according to the data that is available
-    global startYear, endYear
-    if not startYear:
-        startYear = firstYear
-    if not endYear:
-        endYear = lastYear
-    return nameData
-
-
-# Read in Social Security Administration name data CSV files and create a dictionary of dictionaries
-def gatherNameStatistics_OLD():
-    firstYear, lastYear = 9999, 0
-
-    # Read in data files. Each year's data is in a separate file named according to its year. Every name that was given to at least
-    # five babies who were assigned the same sex will have an entry in the following format:
-    # Name,[M/F],Number\r\n
-    for year in os.listdir(os.getcwd() + "/data"):
-        # Ignore the NationalReadMe.pdf and any other files that aren't named appropriately
-        dataFileNames = re.compile(r"yob[0-9]{4}\.txt")
-        if dataFileNames.match(year):
-            f = open("./data/" + year, "r")
-            year = int(year.removeprefix("yob").removesuffix(".txt"))
-
-            # Get the first and last years that data is available for
-            if year < firstYear:
-                firstYear = year
-            if year > lastYear:
-                lastYear = year
-
-            lines = f.readlines()
-            for line in lines:
-                # Split CSV to lists
-                lineList = line.split(",")
-                # If we are looking at a line for the name that was inputted, try to update the dictionary for that year with a subdictionary entry in the format Sex:Number.
-                # If there is not already an entry for that year, it will raise an exception, in which case, create the subdictionary. Strip the newline data off and typecast
-                # data appropriately in the process.
-                if lineList[0] == name:
-                    try:
-                        nameData[int(year)].update(
-                            {lineList[1]: int(lineList[2].rstrip("\r\n"))}
-                        )
-                    except:
-                        nameData[int(year)] = {
-                            lineList[1]: int(lineList[2].rstrip("\r\n"))
-                        }
-            f.close()
 
         # If startYear or endYear is unspecified, set it according to the data that is available
     global startYear, endYear
