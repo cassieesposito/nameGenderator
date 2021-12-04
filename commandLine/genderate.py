@@ -102,30 +102,33 @@ def initialize():
 def printUsage():
     B, b = "\033[1m", "\033[0m"
     U, u = "\033[4m", "\033[0m"
-    print(
-        textwrap.dedent(
-            f"""
-            Outputs gender statistics about US baby names over time based on Social Security
-            Administration data.
 
-            Usage:       ./genderate.py [options] {U}name{u}
-            {U}name{u}   The name you would like statistical information about. Case sensitive.
-            {B}-y{b}     Output data on an annual basis. Mutually exclusive with -d
-            {B}-d{b}     Output data on a decade basis. Mutually exclusive with -y. Default behavior
+    print (os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-            {B}-s{b} {U}year{u}, {B}--start_year={b}{U}year{u}
-                The first year you would like data counted. Default: Earliest available year.
+    # print(
+    #     textwrap.dedent(
+    #         f"""
+    #         Outputs gender statistics about US baby names over time based on Social Security
+    #         Administration data.
 
-            {B}-e{b} {U}year{u}, {B}--end_year={b}{U}year{u}
-                The last year you would like data counted. Default: Latest available year.
+    #         Usage:       ./genderate.py [options] {U}name{u}
+    #         {U}name{u}   The name you would like statistical information about. Case sensitive.
+    #         {B}-y{b}     Output data on an annual basis. Mutually exclusive with -d
+    #         {B}-d{b}     Output data on a decade basis. Mutually exclusive with -y. Default behavior
 
-            This was written primarily for the author's own benefit and the benefit of their growing family.
+    #         {B}-s{b} {U}year{u}, {B}--start_year={b}{U}year{u}
+    #             The first year you would like data counted. Default: Earliest available year.
 
-            SSA data can be found at: https://www.ssa.gov/oact/babynames/names.zip
-            To update, or if you've recieved the script withou accompanying data, unpack the archive to ./data
-            """
-        )
-    )
+    #         {B}-e{b} {U}year{u}, {B}--end_year={b}{U}year{u}
+    #             The last year you would like data counted. Default: Latest available year.
+
+    #         This was written primarily for the author's own benefit and the benefit of their growing family.
+
+    #         SSA data can be found at: https://www.ssa.gov/oact/babynames/names.zip
+    #         To update, or if you've recieved the script withou accompanying data, unpack the archive to ./data
+    #         """
+    #     )
+    # )
     sys.exit()
 
 
@@ -136,11 +139,12 @@ def gatherNameStatistics():
     # Read in data files. Each year's data is in a separate file named according to its year. Every name that was given to at least
     # five babies who were assigned the same sex will have an entry in the following format:
     # Name,[M/F],Number\r\n
-    for year in os.listdir(os.path.dirname(os.path.abspath(__file__)) + "/data"):
+    dataDir=os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/data/"
+    for year in os.listdir(dataDir):
         # Ignore NationalReadMe.pdf and any other files that aren't named appropriately
         dataFileNames = re.compile(r"yob[0-9]{4}\.txt")
         if dataFileNames.match(year):
-            with open("./data/" + year, "r", newline="") as f:
+            with open(dataDir + year, "r", newline="") as f:
                 year = int(year.removeprefix("yob").removesuffix(".txt"))
 
                 # Get the first and last years that data is available for
