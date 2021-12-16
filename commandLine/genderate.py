@@ -43,7 +43,6 @@ import sys, getopt, os, textwrap, re, csv
 ###### MAIN FUNCTION ######
 def main():
     initialize()
-
     gatherNameStatistics()  # Read data into nameData Dictionary
 
     print(
@@ -102,44 +101,42 @@ def initialize():
 def printUsage():
     B, b = "\033[1m", "\033[0m"
     U, u = "\033[4m", "\033[0m"
+    print(
+        textwrap.dedent(
+            f"""
+            Outputs gender statistics about US baby names over time based on Social Security
+            Administration data.
 
-    print (os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            Usage:       ./genderate.py [options] {U}name{u}
+            {U}name{u}   The name you would like statistical information about. Case sensitive.
+            {B}-y{b}     Output data on an annual basis. Mutually exclusive with -d
+            {B}-d{b}     Output data on a decade basis. Mutually exclusive with -y. Default behavior
 
-    # print(
-    #     textwrap.dedent(
-    #         f"""
-    #         Outputs gender statistics about US baby names over time based on Social Security
-    #         Administration data.
+            {B}-s{b} {U}year{u}, {B}--start_year={b}{U}year{u}
+                The first year you would like data counted. Default: Earliest available year.
 
-    #         Usage:       ./genderate.py [options] {U}name{u}
-    #         {U}name{u}   The name you would like statistical information about. Case sensitive.
-    #         {B}-y{b}     Output data on an annual basis. Mutually exclusive with -d
-    #         {B}-d{b}     Output data on a decade basis. Mutually exclusive with -y. Default behavior
+            {B}-e{b} {U}year{u}, {B}--end_year={b}{U}year{u}
+                The last year you would like data counted. Default: Latest available year.
 
-    #         {B}-s{b} {U}year{u}, {B}--start_year={b}{U}year{u}
-    #             The first year you would like data counted. Default: Earliest available year.
+            This was written primarily for the author's own benefit and the benefit of their growing family.
 
-    #         {B}-e{b} {U}year{u}, {B}--end_year={b}{U}year{u}
-    #             The last year you would like data counted. Default: Latest available year.
-
-    #         This was written primarily for the author's own benefit and the benefit of their growing family.
-
-    #         SSA data can be found at: https://www.ssa.gov/oact/babynames/names.zip
-    #         To update, or if you've recieved the script withou accompanying data, unpack the archive to ./data
-    #         """
-    #     )
-    # )
+            SSA data can be found at: https://www.ssa.gov/oact/babynames/names.zip
+            To update, or if you've recieved the script withou accompanying data, unpack the archive to ./data
+            """
+        )
+    )
     sys.exit()
 
 
 def gatherNameStatistics():
     global nameData
-    firstYear, lastYear = 9999, 0
+    firstYear, lastYear = 9999, 1850
 
     # Read in data files. Each year's data is in a separate file named according to its year. Every name that was given to at least
     # five babies who were assigned the same sex will have an entry in the following format:
     # Name,[M/F],Number\r\n
-    dataDir=os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/data/"
+    dataDir=os.path.dirname(os.path.abspath(__file__)) + "/data/"
+    print(dataDir)
     for year in os.listdir(dataDir):
         # Ignore NationalReadMe.pdf and any other files that aren't named appropriately
         dataFileNames = re.compile(r"yob[0-9]{4}\.txt")
@@ -159,12 +156,10 @@ def gatherNameStatistics():
                     # If there is not already an entry for that year, it will raise an exception, in which case, create the subdictionary. Strip the newline data off and typecast
                     # data appropriately in the process.
                     if line[0] == name:
-                        try:
-                            nameData[int(year)].update(
-                                {line[1]: int(line[2].rstrip("\r\n"))}
-                            )
-                        except:
-                            nameData[int(year)] = {line[1]: int(line[2].rstrip("\r\n"))}
+                        if int(year) not in nameData:
+                            nameData[int(year)]={}
+                        nameData[int(year)] |= {line[1]: int(line[2].rstrip("\r\n"))}
+
                 f.close()
 
         # If startYear or endYear is unspecified, set it according to the data that is available
