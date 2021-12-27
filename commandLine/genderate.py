@@ -295,5 +295,5 @@ def outputAnnual():
     girlSpace = " " * (18 - len(str(girlTotal)))
     print("Total%s%d%s%d" % (girlSpace, girlTotal, boySpace, boyTotal))
 
-
-main()
+if __name__ == "__main__":
+    main()
