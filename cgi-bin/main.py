@@ -18,6 +18,9 @@ DB_KWARGS = {
 
 
 def main(request):
+    if request.method == "OPTIONS":
+        return corsInfo()
+
     if "name" in request.args:
         name = str.capitalize(request.args.get("name"))
     else:
@@ -32,4 +35,15 @@ def main(request):
     for record in result:
         nameData[name][record[0]] = {"girls": record[1], "boys": record[2]}
 
-    return json.dumps(nameData)
+    headers = {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"}
+    return (json.dumps(nameData), 200, headers)
+
+
+def corsInfo():
+    headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Max-Age": "3600",
+    }
+    return ("", 204, headers)

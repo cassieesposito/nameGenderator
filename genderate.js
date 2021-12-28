@@ -1,27 +1,15 @@
-// let JSZip = require("jszip")
-// let JSZipUtils = require("jszip-utils")
+let nameData = new Object();
+let db_url = "https://us-west1-portfolio-334101.cloudfunctions.net/nameGenderator?name="
 
-main = () => {
-  let data = loadData()
-  document.getElementById("preformatted").innerHTML = JSON.stringify(data, null, 2)
+loadData = async () => {
+  babyName = document.getElementById("babyName").value
 
-}
-
-loadData = () => {
-
-  dataStructure = {
-    "Kyle": {
-      2010: { "girls": 33, boys: 3574 },
-      2011: { "girls": 58, boys: 3265 },
-      2013: { "girls": 52, boys: 2965 },
-    },
-    "Ashley": {
-      2010: { "girls": 6314, "boys": 31 },
-      2011: { "girls": 5399, "boys": 37 },
-      2012: { "girls": 4700, "boys": 17 },
-    }
+  if (babyName && !nameData[babyName]) {
+    console.log("fetching")
+    response = await fetch(db_url + babyName, { cache: "force-cache" })
+    nameData[babyName] = await response.json()
   }
-  return dataStructure
-}
 
-main()
+  document.getElementById("preformatted").innerHTML = JSON.stringify(nameData[babyName], null, 2)
+
+}

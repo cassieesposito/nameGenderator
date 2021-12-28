@@ -1,10 +1,11 @@
 <html>
   <head>
-
+    <script src="genderate.js"></script>
   </head>
   <body>
-    <object type="text/csv" data="data/yob1880.txt">1880</object>
+    <input type="text" id="babyName" size="16" onblur="loadData()">
+    <input type="button" value="Update" onclick="loadData()">
     <pre id="preformatted">Hello World</pre>
-    <script src="genderate.js"></script>
+
   </body>
 </html>
