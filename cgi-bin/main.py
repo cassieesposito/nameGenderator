@@ -1,6 +1,6 @@
+import re
 import sqlalchemy
 import json
-from sqlalchemy import text
 
 DB_INSTANCE = [
     "portfolio-334101",  # project
@@ -19,17 +19,17 @@ DB_KWARGS = {
 
 def main(request):
     if "name" in request.args:
-        name = request.args.get("name")
+        name = str.capitalize(request.args.get("name"))
     else:
-        return "Must supply name argument"
+        return "Name argument required."
 
     engine = sqlalchemy.create_engine(sqlalchemy.engine.URL.create(**DB_KWARGS))
     with engine.connect() as conn:
-        result = conn.execute(text(f"SELECT * FROM ssa_name_data WHERE name='{name}';"))
-        nameData = result.all()
+        query = f"SELECT year, female, male FROM ssa_name_data WHERE name='{name}';"
+        result = conn.execute(sqlalchemy.text(query)).all()
 
-    response = {name: {}}
-    for year in nameData:
-        response[name][year[1]] = {"girls": year[2], "boys": year[3]}
+    nameData = {name: {}}
+    for record in result:
+        nameData[name][record[0]] = {"girls": record[1], "boys": record[2]}
 
-    return json.dumps(response)
+    return json.dumps(nameData)
