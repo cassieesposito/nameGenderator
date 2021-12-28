@@ -3,7 +3,7 @@ from io import BytesIO
 import urllib.request
 import sqlalchemy
 import re
-import textwrap
+from textwrap import dedent
 
 DB_INSTANCE = [
     "portfolio-334101",  # project
@@ -53,7 +53,7 @@ def getData(file, archive):
 
 
 def buildQuery(sex, data):
-    return textwrap.dedent(
+    return dedent(
         f"""
         INSERT INTO {DB_TABLE}
         (name, year, {sex})
@@ -62,7 +62,3 @@ def buildQuery(sex, data):
         UPDATE SET {sex} = EXCLUDED.{sex};
         """
     )
-
-
-# if __name__ == "__main__":
-#     main("", "")
