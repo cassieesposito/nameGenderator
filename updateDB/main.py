@@ -24,40 +24,30 @@ DB_TABLE = "ssa_name_data"
 
 
 def main(event, context):
-    archive = ZipFile(BytesIO(response.read()))
-
-    engine = sqlalchemy.create_engine(sqlalchemy.engine.URL.create(**DB_KWARGS))
-    with engine.begin() as conn:
-        for decade in range (188, 210):
-            result = conn.execute(sqlalchemy.text(f"SELECT * FROM {DB_TABLE}"))
-            print(result.all())
-            conn.execute(sqlalchemy.text(fQuery))
-            conn.execute(sqlalchemy.text(mQuery))
-
-    archive.close()
-
-    fData, mData = getData()
-    fQuery = buildQuery("female", fData)
-    mQuery = buildQuery("male", mData)
-
-
-
-def getData():
     response = urllib.request.urlopen(NAME_DATA_URL)
+    engine = sqlalchemy.create_engine(sqlalchemy.engine.URL.create(**DB_KWARGS))
+    dataFileNames = re.compile(r"yob[0-9]{4}\.txt")
 
-    with  as zip:
-        dataFileNames = re.compile(r"yob[0-9]{4}\.txt")
-        mData = fData = ""
-        for file in zip.namelist():
-            if dataFileNames.match(file):
-                year = file.removeprefix("yob").removesuffix(".txt")
-                for line in zip.open(file).readlines():
-                    data = line.decode("utf-8").split(",")
-                    data[2] = data[2].removesuffix("\r\n")
-                    if data[1] == "F":
-                        fData += f"('{data[0]}',{year},{data[2]}), "
-                    if data[1] == "M":
-                        mData += f"('{data[0]}',{year},{data[2]}), "
+    with ZipFile(BytesIO(response.read())) as archive:
+        with engine.begin() as conn:
+            for file in archive.namelist():
+                if dataFileNames.match(file):
+                    fData, mData = getData(file, archive)
+                    conn.execute(sqlalchemy.text(buildQuery("female", fData)))
+                    conn.execute(sqlalchemy.text(buildQuery("male", mData)))
+
+
+def getData(file, archive):
+    mData = fData = ""
+    year = file.removeprefix("yob").removesuffix(".txt")
+    print(year)
+    for line in archive.open(file).readlines():
+        data = line.decode("utf-8").split(",")
+        data[2] = data[2].removesuffix("\r\n")
+        if data[1] == "F":
+            fData += f"('{data[0]}',{year},{data[2]}), "
+        if data[1] == "M":
+            mData += f"('{data[0]}',{year},{data[2]}), "
 
     return fData.removesuffix(", "), mData.removesuffix(", ")
 
