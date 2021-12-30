@@ -1,30 +1,14 @@
-from zipfile import ZipFile
-from io import BytesIO
-import urllib.request
-import sqlalchemy
-import re
 import base64
 from datetime import date
-from textwrap import dedent
+import urllib.request
+import re
+from zipfile import ZipFile
+from io import BytesIO
 from deepmerge import always_merger
-from sqlalchemy.sql.expression import except_
+import sqlalchemy
 
-DB_INSTANCE = [
-    "portfolio-334101",  # project
-    "us-west1",  # region
-    "ssa-name-data",  # instance
-]
-
-DB_KWARGS = {
-    "drivername": "postgresql+pg8000",
-    "username": "reader",
-    "database": "ssa-name-data",
-    "password": "6ioAbqTYrVYRe3",
-    "query": {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(":".join(DB_INSTANCE))},
-}
-
-NAME_DATA_URL = "https://www.ssa.gov/oact/babynames/names.zip"
-DB_TABLE = "ssa_name_data"
+import CONST
+import MODELS
 
 
 def main(event, context):
@@ -43,22 +27,13 @@ def getYearsToInsert(event):
     return years
 
 
-def record(ssaData):
-    engine = sqlalchemy.create_engine(sqlalchemy.engine.URL.create(**DB_KWARGS))
-    with engine.begin() as conn:
-        for year in ssaData:
-            print(f"Inserting {year}")
-            conn.execute(sqlalchemy.text(buildQuery(year, ssaData[year])))
-    return
-
-
 def getSSAData(years):
     archive = downloadSSAData()
     return extractData(archive, years)
 
 
 def downloadSSAData():
-    return urllib.request.urlopen(NAME_DATA_URL)
+    return urllib.request.urlopen(CONST.NAME_DATA_URL)
 
 
 def extractData(archive, years):
@@ -68,6 +43,7 @@ def extractData(archive, years):
         for f in files.namelist():
             year = f.removeprefix("yob").removesuffix(".txt")
             if dataFileNames.match(f) and years["start"] <= int(year) <= years["end"]:
+                year = int(year)
                 ssaData[year] = {}
                 for line in files.open(f).readlines():
                     always_merger.merge(ssaData[year], parseLine(line))
@@ -81,35 +57,52 @@ def parseLine(line):
     name = line[0]
     sex = {"F": "female", "M": "male"}
     sex = sex[line[1]]
-    number = line[2].rstrip("\r\n")
+    number = int(line[2].rstrip("\r\n"))
 
     return {name: {sex: number}}
 
 
-def buildQuery(year, ssaData):
-    values = ""
+def record(ssaData):
+    engine = sqlalchemy.create_engine(sqlalchemy.engine.URL.create(**CONST.DB_KWARGS))
+    with engine.begin() as conn:
+        for year in ssaData:
+            print(f"Processing {year}")
+            allRecords = getRecords(year, ssaData[year])
+            for records in allRecords:
+                print(f"Inserting {year}")
+                conn.execute(buildSQLStatement(records))
+    return
+
+
+def getRecords(year, ssaData):
+    allRecords = []
+    records = []
     for name in ssaData:
-        female = ssaData[name]["female"] if "female" in ssaData[name] else 0
-        male = ssaData[name]["male"] if "male" in ssaData[name] else 0
-        values += f"('{name}',{year},{female},{male}), "
-    values = values.removesuffix(", ")
-
-    if ";" in values:
-        raise Exception(
-            f"Possible SQL injection attack detected: character ; exists in source data."
-            + f" Please verify {NAME_DATA_URL} points to a trusted data source."
+        records.append(
+            {
+                "name": name,
+                "year": year,
+                "female": ssaData[name]["female"] if "female" in ssaData[name] else 0,
+                "male": ssaData[name]["male"] if "male" in ssaData[name] else 0,
+            }
         )
+        if len(records) > 5000:
+            allRecords.append(records)
+            records = []
+    if records:
+        allRecords.append(records)
 
-    return dedent(
-        f"""
-		INSERT INTO {DB_TABLE}
-		(name, year, female, male)
-		VALUES {values}
-		ON CONFLICT (name, year) DO
-		UPDATE SET female = EXCLUDED.female, male = EXCLUDED.male;
-		"""
+    return allRecords
+
+
+def buildSQLStatement(records):
+    statement = sqlalchemy.dialects.postgresql.insert(MODELS.TABLE).values(records)
+    doUpdateStatement = statement.on_conflict_do_update(
+        index_elements=["name", "year"],
+        set_={"female": statement.excluded.female, "male": statement.excluded.male},
     )
+    return doUpdateStatement
 
 
 # if __name__ == "__main__":
-#     main({"data": base64.b64encode("".encode("utf-8"))}, "")
+#     main({"data": base64.b64encode("1880,1880".encode("utf-8"))}, "")
