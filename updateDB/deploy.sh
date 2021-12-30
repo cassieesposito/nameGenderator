@@ -1,6 +1,6 @@
 gcloud functions deploy 'updateBabyNameData'\
  --runtime 'python39'\
- --memory '512MB'\
+ --memory '1024MB'\
  --service-account='name-genderator@portfolio-334101.iam.gserviceaccount.com'\
  --trigger-topic 'updateBabyNameData'\
  --entry-point 'main'\
