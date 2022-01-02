@@ -1,0 +1,97 @@
+    .column {
+        position: relative;
+        display: inline-block;
+        vertical-align: top;
+        width: "100%";
+        min-width: 18em;
+        max-width: 35em;
+        background-color: lightgray;
+        padding: .125em;
+        border: .125em solid darkblue;
+    }
+    
+    .close {
+        position: absolute;
+        top: .5em;
+        right: .25em;
+        width: 1em;
+        height: 1em;
+        background: url("img/close_normal.svg") no-repeat;
+        background-size: cover;
+        display: inline-block;
+    }
+    
+    .close:hover {
+        background: url("img/close_hover.svg");
+        background-size: cover;
+    }
+    
+    .inputContainer {
+        border-radius: .75em;
+        margin-top: .25em;
+        background-color: #f8f8f8;
+        padding: .5em;
+    }
+    
+    .inputRow:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+    
+    .inputRow div {
+        float: left;
+        margin-top: .25em;
+    }
+    
+    .inputRow div.year {
+        width: 3em;
+    }
+    
+    .inputRow div.name {
+        width: 11em;
+    }
+    
+    .inputRow input[type=text],
+    select {
+        width: 100%;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    
+    label {
+        display: inline-block;
+    }
+    
+    div.label {
+        float: left;
+        width: 5em;
+        margin-top: .25em;
+    }
+    
+    .addColumn {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 48;
+        width: 48px;
+        background: url("img/Icons8_flat_add_column.svg")
+    }
+    
+    .tableContainer {
+        margin-top: .25em;
+        border-radius: .75em;
+        background-color: #f8f8f8;
+        /* padding: .5em; */
+    }
+    
+    .tableContainer table {
+        width: 100%;
+    }
+    
+    .tableContainer td.number {
+        text-align: right;
+        padding-left: 20px;
+    }

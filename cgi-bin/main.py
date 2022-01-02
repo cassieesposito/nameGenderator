@@ -24,11 +24,11 @@ def httpGetResponse(name):
 
 
 def queryDatabase(name):
-    nameData = {name: {}}
+    nameData = {}
     with MODELS.ENGINE.connect() as conn:
         stmt = select(MODELS.TABLE).where(MODELS.TABLE.c.name == name)
         for row in conn.execute(stmt):
-            nameData[name][row.year] = {"female": row.female, "male": row.male}
+            nameData[row.year] = {"female": row.female, "male": row.male}
 
     return nameData
 

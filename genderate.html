@@ -1,11 +1,21 @@
 <html>
-  <head>
-    <script src="genderate.js"></script>
-  </head>
-  <body>
-    <input type="text" id="babyName" size="16" onblur="loadData()">
-    <input type="button" value="Update" onclick="loadData()">
-    <pre id="preformatted">Hello World</pre>
 
-  </body>
+<head>
+    <script src="genderate.js"></script>
+    <link rel="stylesheet" href="genderate.css">
+</head>
+
+<body onload="createColumn()">
+    <div class="addColumn" onclick="createColumn()"></div>
+    <div>
+        <h1>Name Genderator</h1>
+        <p>Only use me for good.</p>
+    </div>
+    <div id="columnContainer"></div>
+
+
+
+
+</body>
+
 </html>
