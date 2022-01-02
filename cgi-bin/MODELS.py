@@ -1,4 +1,5 @@
 import CONST
+from os import getenv
 
 from sqlalchemy import (
     engine,
@@ -11,6 +12,7 @@ from sqlalchemy import (
     Integer,
 )
 
+CONST.DB_KWARGS["password"] = getenv("DB_PASSWD")
 ENGINE = create_engine(engine.URL.create(**CONST.DB_KWARGS))
 
 TABLE = Table(

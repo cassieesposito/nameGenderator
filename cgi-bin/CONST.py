@@ -8,7 +8,7 @@ DB_KWARGS = {
     "drivername": "postgresql+pg8000",
     "username": "reader",
     "database": "ssa-name-data",
-    "password": "6ioAbqTYrVYRe3",
+    "password": "YOUR_PASSWORD_HERE",
     "query": {"unix_sock": "/cloudsql/{}/.s.PGSQL.5432".format(":".join(DB_INSTANCE))},
 }
 
